@@ -6,17 +6,6 @@ repos:
     - id: requirements-txt-fixer
 - repo: local
   hooks:
-    - id: flake8
-      name: flake8
-      entry: flake8
-      language: system
-      types: [python]
-      args: [--max-line-length=88]
-      exclude: |
-            (?x)^(
-                docs*|
-                test*
-            )$
     - id: isort
       name: isort
       entry: isort
