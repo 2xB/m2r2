@@ -13,6 +13,7 @@ from m2r2.rst.renderer import RestRenderer
 __version__ = get_distribution("m2r2").version
 
 
+# TODO: check this
 class M2R(mistune.Markdown):
     def __init__(self, renderer=None, block=None, inline=None, plugins=None):
         renderer = renderer or RestRenderer()
