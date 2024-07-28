@@ -1,0 +1,42 @@
+[tool.poetry]
+name = "m2r2"
+version = "1.0.0"
+description = "Markdown and reStructuredText in a single file."
+authors = ["CrossNox <ijmermet+m2r2@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.scripts]
+m2r2 = "m2r2:main"
+
+[tool.poetry.dependencies]
+python = ">=3.9"
+mistune = ">=2.0,<3.0"
+docutils = ">=0.16,<0.22"
+
+
+[tool.poetry.group.dev.dependencies]
+pygments = "^2.18.0"
+black = "^24.4.2"
+isort = "^5.13.2"
+pylint = "^3.2.6"
+mypy = "^1.11.0"
+ruff = "^0.5.5"
+bandit = "^1.7.9"
+
+[tool.poetry.group.testing.dependencies]
+pytest = "^8.3.2"
+pytest-cov = "^5.0.0"
+six = "^1.16.0"
+sphinx = "^7.4.7"
+
+[tool.bandit]
+exclude_dirs = ["tests"]
+
+[tool.mypy]
+ignore_missing_imports = true
+follow_imports = "skip"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
