@@ -138,6 +138,7 @@ class RestRenderer(BaseRenderer):
         return r"\ **{}**\ ".format(text)
 
     def emphasis(self, text):
+        print(f"emphasis {text=}")
         return r"\ *{}*\ ".format(text)
 
     def codespan(self, text):
@@ -346,18 +347,24 @@ class RestInlineParser(mistune.InlineParser):
         marker = ":" if match.group(1) is None else ""
         return "eol_literal_marker", marker
 
-    def no_underscore_emphasis(self):
-        self.DOUBLE_EMPHASIS = re.compile(
-            r"^\*{2}(?P<text>[\s\S]+?)\*{2}(?!\*)"  # **word**
-        )
-        self.EMPHASIS = re.compile(r"^\*(?P<text>(?:\*\*|[^\*])+?)\*(?!\*)")  # *word*
+    def disable_underscore_emphasis(self):
+        print("Running no_underscore_emphasis")
+        self.deregister_rule("underscore_emphasis")
+
+    def deregister_rule(self, rule):
+        self.rules.remove(rule)
 
     def __init__(self, renderer, *args, **kwargs):
         # no_underscore_emphasis = kwargs.pop("no_underscore_emphasis", False)
         disable_inline_math = kwargs.pop("disable_inline_math", False)
+        no_underscore_emphasis = kwargs.pop("no_underscore_emphasis", False)
         super().__init__(renderer, *args, **kwargs)
         # if not _is_sphinx:
         #    parse_options()
+
+        if no_underscore_emphasis:
+            self.disable_underscore_emphasis()
+
         # if no_underscore_emphasis or getattr(options, "no_underscore_emphasis", False):
         #    self.rules.no_underscore_emphasis()
         inline_maths = "inline_math" in self.RULE_NAMES
@@ -373,9 +380,14 @@ class RestInlineParser(mistune.InlineParser):
 class M2R2(mistune.Markdown):
     def __init__(self, renderer=None, block=None, inline=None, plugins=None, **kwargs):
         disable_inline_math = kwargs.pop("disable_inline_math", False)
+        no_underscore_emphasis = kwargs.pop("no_underscore_emphasis", False)
         renderer = renderer or RestRenderer(**kwargs)
         block = block or RestBlockParser()
-        inline = inline or RestInlineParser(renderer, disable_inline_math)
+        inline = inline or RestInlineParser(
+            renderer,
+            disable_inline_math=disable_inline_math,
+            no_underscore_emphasis=no_underscore_emphasis,
+        )
         super().__init__(renderer=renderer, block=block, inline=inline, plugins=plugins)
 
     def parse(self, text):
