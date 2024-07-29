@@ -293,21 +293,11 @@ class RestBlockParser(mistune.BlockParser):
 
 
 class RestInlineParser(mistune.InlineParser):
+    INLINE_MATH = r"`\$(.*?)\$`"
     IMAGE_LINK = r"\[!\[(?P<alt>.*?)\]\((?P<url>.*?)\).*?\]\((?P<target>.*?)\)"
     REST_ROLE = r":.*?:`.*?`|`[^`]+`:.*?:"
     REST_LINK = r"`[^`]*?`_"
-    INLINE_MATH = r"`\$(.*?)\$`"
     EOL_LITERAL_MARKER = r"(\s+)?::\s*$"
-    # add colon and space as special text
-    TEXT = r"^[\s\S]+?(?=[\\<!\[:_*`~ ]|https?://| {2,}\n|$)"
-    # __word__ or **word**
-    DOUBLE_EMPHASIS = r"^([_*]){2}(?P<text>[\s\S]+?)\1{2}(?!\1)"
-    # _word_ or *word*
-    EMPHASIS = (
-        r"^\b_((?:__|[^_])+?)_\b"  # _word_
-        r"|"
-        r"^\*(?P<text>(?:\*\*|[^\*])+?)\*(?!\*)"  # *word*
-    )
 
     RULE_NAMES = (
         "inline_math",
@@ -315,15 +305,8 @@ class RestInlineParser(mistune.InlineParser):
         "rest_role",
         "rest_link",
         "eol_literal_marker",
-    ) + mistune.InlineParser.RULE_NAMES
-
-    def parse_double_emphasis(self, match: Match, state: State) -> Element:
-        # may include code span
-        return "double_emphasis", match.group("text")
-
-    def parse_emphasis(self, match: Match, state: State) -> Element:
-        # may include code span
-        return "emphasis", match.group("text") or match.group(1)
+        *mistune.InlineParser.RULE_NAMES,
+    )
 
     def parse_image_link(self, match: Match, state: State) -> Element:
         """Pass through rest role."""
@@ -348,8 +331,10 @@ class RestInlineParser(mistune.InlineParser):
         return "eol_literal_marker", marker
 
     def disable_underscore_emphasis(self):
-        print("Running no_underscore_emphasis")
         self.deregister_rule("underscore_emphasis")
+
+    def disable_inline_math(self):
+        self.deregister_rule("inline_math")
 
     def deregister_rule(self, rule):
         self.rules.remove(rule)
@@ -358,23 +343,14 @@ class RestInlineParser(mistune.InlineParser):
         # no_underscore_emphasis = kwargs.pop("no_underscore_emphasis", False)
         disable_inline_math = kwargs.pop("disable_inline_math", False)
         no_underscore_emphasis = kwargs.pop("no_underscore_emphasis", False)
+
         super().__init__(renderer, *args, **kwargs)
-        # if not _is_sphinx:
-        #    parse_options()
 
         if no_underscore_emphasis:
             self.disable_underscore_emphasis()
 
-        # if no_underscore_emphasis or getattr(options, "no_underscore_emphasis", False):
-        #    self.rules.no_underscore_emphasis()
-        inline_maths = "inline_math" in self.RULE_NAMES
-        if disable_inline_math:  # or getattr(options, "disable_inline_math", False):
-            if inline_maths:
-                self.RULE_NAMES = tuple(
-                    x for x in self.RULE_NAMES if x != "inline_math"
-                )
-        elif not inline_maths:
-            self.RULE_NAMES = ("inline_math", *self.RULE_NAMES)
+        if disable_inline_math:
+            self.disable_inline_math()
 
 
 class M2R2(mistune.Markdown):
@@ -390,8 +366,8 @@ class M2R2(mistune.Markdown):
         )
         super().__init__(renderer=renderer, block=block, inline=inline, plugins=plugins)
 
-    def parse(self, text):
-        output = super().parse(text)
+    def parse(self, s, state=None):
+        output = super().parse(s, state)
         return self.post_process(output)
 
     def post_process(self, text):
