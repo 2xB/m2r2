@@ -1,3 +1,3 @@
-from .m2r2 import M2R, convert
+from .m2r2 import M2R2, convert
 
-__all__ = ("M2R", "convert")
+__all__ = ("M2R2", "convert")

@@ -1,5 +1,5 @@
 from m2r2.m2r2 import __version__
-from m2r2.parser import M2RParser
+from m2r2.parser import M2R2Parser
 from m2r2.rst.directives import MdInclude
 
 _is_sphinx = False
@@ -17,14 +17,14 @@ def setup(app):
         "m2r_use_mermaid", "sphinxcontrib.mermaid" in app.config.extensions, "env"
     )
     try:
-        app.add_source_parser(".md", M2RParser)  # for older sphinx versions
+        app.add_source_parser(".md", M2R2Parser)  # for older sphinx versions
     except (TypeError, AttributeError):
         app.add_source_suffix(".md", "markdown")
-        app.add_source_parser(M2RParser)
+        app.add_source_parser(M2R2Parser)
     app.add_directive("mdinclude", MdInclude)
-    metadata = dict(
-        version=__version__,
-        parallel_read_safe=True,
-        parallel_write_safe=True,
-    )
+    metadata = {
+        "version": __version__,
+        "parallel_read_safe": True,
+        "parallel_write_safe": True,
+    }
     return metadata

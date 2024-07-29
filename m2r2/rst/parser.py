@@ -109,7 +109,7 @@ class RestInlineParser(mistune.InlineParser):
         self.EMPHASIS = re.compile(r"^\*(?P<text>(?:\*\*|[^\*])+?)\*(?!\*)")  # *word*
 
     def __init__(self, renderer, *args, **kwargs):
-        # no_underscore_emphasis = kwargs.pop("no_underscore_emphasis", False)
+        no_underscore_emphasis = kwargs.pop("no_underscore_emphasis", False)
         disable_inline_math = kwargs.pop("disable_inline_math", False)
         super().__init__(renderer, *args, **kwargs)
         # if not _is_sphinx:

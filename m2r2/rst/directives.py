@@ -3,7 +3,7 @@ import os
 from docutils import io, nodes, statemachine, utils
 from docutils.parsers import rst
 
-from m2r2 import M2R
+from m2r2 import M2R2
 
 
 class MdInclude(rst.Directive):
@@ -26,7 +26,7 @@ class MdInclude(rst.Directive):
         docutils version: 0.12
         """
         if not self.state.document.settings.file_insertion_enabled:
-            raise self.warning('"%s" directive disabled.' % self.name)
+            raise self.warning(f'"{self.name}" directive disabled.')
         source = self.state_machine.input_lines.source(
             self.lineno - self.state_machine.input_offset - 1
         )
@@ -53,14 +53,13 @@ class MdInclude(rst.Directive):
             )
         except UnicodeEncodeError:
             raise self.severe(
-                'Problems with "%s" directive path:\n'
-                'Cannot encode input file path "%s" '
-                "(wrong locale?)." % (self.name, str(path))
+                f'Problems with "{self.name}" directive path:\n'
+                f'Cannot encode input file path "{path}" '
+                "(wrong locale?)."
             )
         except IOError as error:
             raise self.severe(
-                'Problems with "%s" directive path:\n%s.'
-                % (self.name, io.error_string(error))
+                f'Problems with "{self.name}" directive path:\n{io.error_string(error)}.'
             )
 
         # read from the file
@@ -74,11 +73,11 @@ class MdInclude(rst.Directive):
                 rawtext = include_file.read()
         except UnicodeError as error:
             raise self.severe(
-                'Problem with "%s" directive:\n%s' % (self.name, io.error_string(error))
+                f'Problem with "{self.name}" directive:\n{io.error_string(error)}'
             )
 
         config = self.state.document.settings.env.config
-        converter = M2R(
+        converter = M2R2(
             no_underscore_emphasis=config.no_underscore_emphasis,
             parse_relative_links=config.m2r_parse_relative_links,
             anonymous_references=config.m2r_anonymous_references,

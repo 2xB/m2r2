@@ -25,7 +25,7 @@ class RestRenderer(BaseRenderer):
         self.parse_relative_links = kwargs.pop("parse_relative_links", False)
         self.anonymous_references = kwargs.pop("anonymous_references", False)
         self.use_mermaid = kwargs.pop("use_mermaid", False)
-        super(RestRenderer, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         # if not _is_sphinx:
         #    parse_options()
         #    if getattr(options, "parse_relative_links", False):
@@ -88,7 +88,7 @@ class RestRenderer(BaseRenderer):
         :param level: a number for the header level, for example: 1.
         :param raw: raw text content of the header.
         """
-        return "\n{0}\n{1}\n".format(text, self.hmarks[level] * column_width(text))
+        return f"\n{text}\n{self.hmarks[level] * column_width(text)}\n"
 
     def thematic_break(self):
         """Rendering method for ``<hr>`` tag."""
@@ -105,7 +105,9 @@ class RestRenderer(BaseRenderer):
         for i, line in enumerate(lines):
             if line and not line.startswith(self.list_marker):
                 lines[i] = " " * len(mark) + line
-        return "\n{}\n".format("\n".join(lines)).replace(self.list_marker, mark)
+
+        list_lines = "\n".join(lines)
+        return f"\n{list_lines}\n".replace(self.list_marker, mark)
 
     def list_item(self, text, level):
         """Rendering list item snippet. Like ``<li>``."""
@@ -163,17 +165,17 @@ class RestRenderer(BaseRenderer):
 
         :param text: text content for emphasis.
         """
-        return r"\ **{}**\ ".format(text)
+        return rf"\ **{text}**\ "
 
     def emphasis(self, text):
         """Rendering *emphasis* text.
 
         :param text: text content for emphasis.
         """
-        return r"\ *{}*\ ".format(text)
+        return rf"\ *{text}*\ "
 
     def strong(self, text):
-        return r"**{}**".format(text)
+        return rf"**{text}**"
 
     def codespan(self, text):
         """Rendering inline `code` text.
@@ -181,14 +183,13 @@ class RestRenderer(BaseRenderer):
         :param text: text content for inline code.
         """
         if "``" not in text:
-            return r"\ ``{}``\ ".format(text)
-        else:
-            # actually, docutils split spaces in literal
-            return self._raw_html(
-                '<code class="docutils literal">'
-                '<span class="pre">{}</span>'
-                "</code>".format(text.replace("`", "&#96;"))
-            )
+            return rf"\ ``{text}``\ "
+        # actually, docutils split spaces in literal
+        return self._raw_html(
+            '<code class="docutils literal">'
+            f'<span class="pre">{text.replace("`", "&#96;")}</span>'
+            "</code>"
+        )
 
     def linebreak(self):
         """Rendering line break like ``<br>``."""
@@ -201,7 +202,7 @@ class RestRenderer(BaseRenderer):
 
         :param text: text content for strikethrough.
         """
-        return self._raw_html("<del>{}</del>".format(text))
+        return self._raw_html(f"<del>{text}</del>")
 
     def text(self, text):
         """Rendering unformatted text.
@@ -269,7 +270,7 @@ class RestRenderer(BaseRenderer):
                 "",
                 f".. image:: {src}",
                 f"   :target: {src}",
-                f"   :alt: {tex}",
+                f"   :alt: {text}",
                 "",
             ]
         )

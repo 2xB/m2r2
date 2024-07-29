@@ -14,7 +14,7 @@ __version__ = get_distribution("m2r2").version
 
 
 # TODO: check this
-class M2R(mistune.Markdown):
+class M2R2(mistune.Markdown):
     def __init__(
         self,
         renderer=None,
@@ -25,6 +25,7 @@ class M2R(mistune.Markdown):
         parse_relative_links: bool = False,
         anonymous_references: bool = False,
         disable_inline_math: bool = True,
+        no_underscore_emphasis: bool = True,
     ):
         renderer = renderer or RestRenderer(
             use_mermaid=use_mermaid,
@@ -33,12 +34,14 @@ class M2R(mistune.Markdown):
         )
         block = block or RestBlockParser()
         inline = inline or RestInlineParser(
-            renderer, disable_inline_math=disable_inline_math
+            renderer,
+            disable_inline_math=disable_inline_math,
+            no_underscore_emphasis=no_underscore_emphasis,
         )
         super().__init__(renderer=renderer, block=block, inline=inline, plugins=plugins)
 
-    def parse(self, text):
-        output = super().parse(text)
+    def parse(self, s, state=None):
+        output = super().parse(s, state)
         return self.post_process(output)
 
     def post_process(self, text):
@@ -51,9 +54,8 @@ class M2R(mistune.Markdown):
         )
         if self.renderer._include_raw_html:
             return PROLOG + output
-        else:
-            return output
+        return output
 
 
 def convert(text, **kwargs):
-    return M2R(**kwargs)(text)
+    return M2R2(**kwargs)(text)
