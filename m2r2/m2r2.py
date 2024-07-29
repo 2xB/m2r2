@@ -292,25 +292,23 @@ class RestBlockParser(mistune.BlockParser):
 
 
 class RestInlineParser(mistune.InlineParser):
-    IMAGE_LINK = re.compile(
-        r"\[!\[(?P<alt>.*?)\]\((?P<url>.*?)\).*?\]\((?P<target>.*?)\)"
-    )
-    REST_ROLE = re.compile(r":.*?:`.*?`|`[^`]+`:.*?:")
-    REST_LINK = re.compile(r"`[^`]*?`_")
-    INLINE_MATH = re.compile(r"`\$(.*?)\$`")
-    EOL_LITERAL_MARKER = re.compile(r"(\s+)?::\s*$")
+    IMAGE_LINK = r"\[!\[(?P<alt>.*?)\]\((?P<url>.*?)\).*?\]\((?P<target>.*?)\)"
+    REST_ROLE = r":.*?:`.*?`|`[^`]+`:.*?:"
+    REST_LINK = r"`[^`]*?`_"
+    INLINE_MATH = r"`\$(.*?)\$`"
+    EOL_LITERAL_MARKER = r"(\s+)?::\s*$"
     # add colon and space as special text
-    TEXT = re.compile(r"^[\s\S]+?(?=[\\<!\[:_*`~ ]|https?://| {2,}\n|$)")
+    TEXT = r"^[\s\S]+?(?=[\\<!\[:_*`~ ]|https?://| {2,}\n|$)"
     # __word__ or **word**
-    DOUBLE_EMPHASIS = re.compile(r"^([_*]){2}(?P<text>[\s\S]+?)\1{2}(?!\1)")
+    DOUBLE_EMPHASIS = r"^([_*]){2}(?P<text>[\s\S]+?)\1{2}(?!\1)"
     # _word_ or *word*
-    EMPHASIS = re.compile(
+    EMPHASIS = (
         r"^\b_((?:__|[^_])+?)_\b"  # _word_
         r"|"
         r"^\*(?P<text>(?:\*\*|[^\*])+?)\*(?!\*)"  # *word*
     )
 
-    RUlE_NAMES = (
+    RULE_NAMES = (
         "inline_math",
         "image_link",
         "rest_role",
@@ -366,10 +364,10 @@ class RestInlineParser(mistune.InlineParser):
         if disable_inline_math:  # or getattr(options, "disable_inline_math", False):
             if inline_maths:
                 self.RULE_NAMES = tuple(
-                    x for x in self.RUlE_NAMES if x != "inline_math"
+                    x for x in self.RULE_NAMES if x != "inline_math"
                 )
         elif not inline_maths:
-            self.RUlE_NAMES = ("inline_math", *self.RUlE_NAMES)
+            self.RULE_NAMES = ("inline_math", *self.RULE_NAMES)
 
 
 class M2R2(mistune.Markdown):
