@@ -220,12 +220,165 @@ class RestRenderer(BaseRenderer):
     def footnotes(self, text):
         return "\n\n" + text if text else ""
 
+    """Below outputs are for rst."""
+
+    def image_link(self, url, target, alt):
+        return "\n".join(
+            [
+                "",
+                ".. image:: {}".format(url),
+                "   :target: {}".format(target),
+                "   :alt: {}".format(alt),
+                "",
+            ]
+        )
+
+    def rest_role(self, text):
+        return text
+
+    def rest_link(self, text):
+        return text
+
+    def inline_math(self, math):
+        """Extension of recommonmark."""
+        return r":math:`{}`".format(math)
+
+    def eol_literal_marker(self, marker):
+        """Extension of recommonmark."""
+        return marker
+
+    def directive(self, text):
+        return "\n" + text
+
+    def rest_code_block(self, text):
+        return "\n\n"
+
+
+from typing import Any, Dict, Match, Tuple
+
+import mistune
+
+from m2r2.typing import Element, State, Token
+
+
+class RestBlockParser(mistune.BlockParser):
+    DIRECTIVE = re.compile(
+        r"^( *\.\..*?)\n(?=\S)",
+        re.DOTALL | re.MULTILINE,
+    )
+    ONELINE_DIRECTIVE = re.compile(
+        r"^( *\.\..*?)$",
+        re.DOTALL | re.MULTILINE,
+    )
+    REST_CODE_BLOCK = re.compile(
+        r"^::\s*$",
+        re.DOTALL | re.MULTILINE,
+    )
+    RULE_NAMES = mistune.BlockParser.RULE_NAMES + (
+        "directive",
+        "oneline_directive",
+        "rest_code_block",
+    )
+
+    def parse_directive(self, match: Match, state: State) -> Token:
+        return {"type": "directive", "text": match.group(1)}
+
+    def parse_oneline_directive(self, match: Match, state: State) -> Token:
+        # reuse directive output
+        return {"type": "directive", "text": match.group(1)}
+
+    def parse_rest_code_block(self, match: Match, state: State) -> Token:
+        return {"type": "rest_code_block", "text": ""}
+
+
+class RestInlineParser(mistune.InlineParser):
+    IMAGE_LINK = re.compile(
+        r"\[!\[(?P<alt>.*?)\]\((?P<url>.*?)\).*?\]\((?P<target>.*?)\)"
+    )
+    REST_ROLE = re.compile(r":.*?:`.*?`|`[^`]+`:.*?:")
+    REST_LINK = re.compile(r"`[^`]*?`_")
+    INLINE_MATH = re.compile(r"`\$(.*?)\$`")
+    EOL_LITERAL_MARKER = re.compile(r"(\s+)?::\s*$")
+    # add colon and space as special text
+    TEXT = re.compile(r"^[\s\S]+?(?=[\\<!\[:_*`~ ]|https?://| {2,}\n|$)")
+    # __word__ or **word**
+    DOUBLE_EMPHASIS = re.compile(r"^([_*]){2}(?P<text>[\s\S]+?)\1{2}(?!\1)")
+    # _word_ or *word*
+    EMPHASIS = re.compile(
+        r"^\b_((?:__|[^_])+?)_\b"  # _word_
+        r"|"
+        r"^\*(?P<text>(?:\*\*|[^\*])+?)\*(?!\*)"  # *word*
+    )
+
+    RUlE_NAMES = (
+        "inline_math",
+        "image_link",
+        "rest_role",
+        "rest_link",
+        "eol_literal_marker",
+    ) + mistune.InlineParser.RULE_NAMES
+
+    def parse_double_emphasis(self, match: Match, state: State) -> Element:
+        # may include code span
+        return "double_emphasis", match.group("text")
+
+    def parse_emphasis(self, match: Match, state: State) -> Element:
+        # may include code span
+        return "emphasis", match.group("text") or match.group(1)
+
+    def parse_image_link(self, match: Match, state: State) -> Element:
+        """Pass through rest role."""
+        alt, src, target = match.groups()
+        return "image_link", src, target, alt
+
+    def parse_rest_role(self, match: Match, state: State) -> Element:
+        """Pass through rest role."""
+        return "rest_role", match.group(0)
+
+    def parse_rest_link(self, match: Match, state: State) -> Element:
+        """Pass through rest link."""
+        return "rest_link", match.group(0)
+
+    def parse_inline_math(self, match: Match, state: State) -> Element:
+        """Pass through rest link."""
+        return "inline_math", match.group(2)
+
+    def parse_eol_literal_marker(self, match: Match, state: State) -> Element:
+        """Pass through rest link."""
+        marker = ":" if match.group(1) is None else ""
+        return "eol_literal_marker", marker
+
+    def no_underscore_emphasis(self):
+        self.DOUBLE_EMPHASIS = re.compile(
+            r"^\*{2}(?P<text>[\s\S]+?)\*{2}(?!\*)"  # **word**
+        )
+        self.EMPHASIS = re.compile(r"^\*(?P<text>(?:\*\*|[^\*])+?)\*(?!\*)")  # *word*
+
+    def __init__(self, renderer, *args, **kwargs):
+        # no_underscore_emphasis = kwargs.pop("no_underscore_emphasis", False)
+        disable_inline_math = kwargs.pop("disable_inline_math", False)
+        super().__init__(renderer, *args, **kwargs)
+        # if not _is_sphinx:
+        #    parse_options()
+        # if no_underscore_emphasis or getattr(options, "no_underscore_emphasis", False):
+        #    self.rules.no_underscore_emphasis()
+        inline_maths = "inline_math" in self.RULE_NAMES
+        if disable_inline_math:  # or getattr(options, "disable_inline_math", False):
+            if inline_maths:
+                self.RULE_NAMES = tuple(
+                    x for x in self.RUlE_NAMES if x != "inline_math"
+                )
+        elif not inline_maths:
+            self.RUlE_NAMES = ("inline_math", *self.RUlE_NAMES)
+
 
 class M2R2(mistune.Markdown):
-    def __init__(self, **kwargs):
-        renderer = RestRenderer(**kwargs)
-        plugins = []
-        super().__init__(renderer=renderer, plugins=plugins)
+    def __init__(self, renderer=None, block=None, inline=None, plugins=None, **kwargs):
+        disable_inline_math = kwargs.pop("disable_inline_math", False)
+        renderer = renderer or RestRenderer(**kwargs)
+        block = block or RestBlockParser()
+        inline = inline or RestInlineParser(renderer, disable_inline_math)
+        super().__init__(renderer=renderer, block=block, inline=inline, plugins=plugins)
 
     def parse(self, text):
         output = super().parse(text)
