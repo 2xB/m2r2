@@ -1,46 +1,45 @@
 repos:
-- repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.3.0
-  hooks:
-    - id: trailing-whitespace
-    - id: requirements-txt-fixer
-- repo: local
-  hooks:
-    - id: isort
-      name: isort
-      entry: isort
-      language: system
-      types: [python]
-      args: [--multi-line=3,--trailing-comma,--force-grid-wrap=0,--use-parentheses,--line-width=88]
-      exclude: |
-            (?x)^(
-                docs*|
-                test*
-            )$
-    - id: black
-      name: black
-      entry: black
-      language: system
-      types: [python]
-      args: []
-      exclude: |
-            (?x)^(
-                docs*|
-                test*
-            )$
-    - id: mypy
-      name: mypy
-      entry: mypy
-      language: system
-      types: [python]
-      exclude: |
-            (?x)^(
-                docs*|
-                test*
-            )$
-    - id: pylint
-      name: pylint
-      entry: pylint
-      language: system
-      types: [python]
-      exclude: (tests|docs)*
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.3.0
+    hooks:
+      - id: trailing-whitespace
+      - id: requirements-txt-fixer
+  - repo: local
+    hooks:
+      - id: isort
+        name: isort
+        entry: poetry run isort
+        language: system
+        types: [python]
+        exclude: |
+          (?x)^(
+              docs*|
+              test*
+          )$
+      - id: black
+        name: black
+        entry: poetry run black
+        language: system
+        types: [python]
+        args: []
+        exclude: |
+          (?x)^(
+              docs*|
+              test*
+          )$
+      - id: mypy
+        name: mypy
+        entry: poetry run mypy
+        language: system
+        types: [python]
+        exclude: |
+          (?x)^(
+              docs*|
+              test*
+          )$
+      - id: pylint
+        name: pylint
+        entry: poetry run pylint
+        language: system
+        types: [python]
+        exclude: (tests|docs)*

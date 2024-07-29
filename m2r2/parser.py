@@ -8,11 +8,8 @@ class M2RParser(rst.Parser):
     # Explicitly tell supported formats to sphinx
     supported = ("markdown", "md", "mkd")
 
-    def parse(self, inputstrings, document):
-        if isinstance(inputstrings, statemachine.StringList):
-            inputstring = "\n".join(inputstrings)
-        else:
-            inputstring = inputstrings
+    def parse(self, inputstring, document):
+        """Parse `inputstring` and populate `document`, a document tree."""
         config = document.settings.env.config
         converter = M2R(
             no_underscore_emphasis=config.no_underscore_emphasis,

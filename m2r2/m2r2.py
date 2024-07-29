@@ -15,10 +15,26 @@ __version__ = get_distribution("m2r2").version
 
 # TODO: check this
 class M2R(mistune.Markdown):
-    def __init__(self, renderer=None, block=None, inline=None, plugins=None):
-        renderer = renderer or RestRenderer()
+    def __init__(
+        self,
+        renderer=None,
+        block=None,
+        inline=None,
+        plugins=None,
+        use_mermaid: bool = False,
+        parse_relative_links: bool = False,
+        anonymous_references: bool = False,
+        disable_inline_math: bool = True,
+    ):
+        renderer = renderer or RestRenderer(
+            use_mermaid=use_mermaid,
+            parse_relative_links=parse_relative_links,
+            anonymous_references=anonymous_references,
+        )
         block = block or RestBlockParser()
-        inline = inline or RestInlineParser(renderer)
+        inline = inline or RestInlineParser(
+            renderer, disable_inline_math=disable_inline_math
+        )
         super().__init__(renderer=renderer, block=block, inline=inline, plugins=plugins)
 
     def parse(self, text):

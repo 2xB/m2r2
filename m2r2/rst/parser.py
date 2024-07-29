@@ -64,7 +64,7 @@ class RestInlineParser(mistune.InlineParser):
         r"^\*(?P<text>(?:\*\*|[^\*])+?)\*(?!\*)"  # *word*
     )
 
-    RUlE_NAMES = (
+    RULE_NAMES = (
         "inline_math",
         "image_link",
         "rest_role",
@@ -120,7 +120,7 @@ class RestInlineParser(mistune.InlineParser):
         if disable_inline_math:  # or getattr(options, "disable_inline_math", False):
             if inline_maths:
                 self.RULE_NAMES = tuple(
-                    x for x in self.RUlE_NAMES if x != "inline_math"
+                    x for x in self.RULE_NAMES if x != "inline_math"
                 )
         elif not inline_maths:
-            self.RUlE_NAMES = ("inline_math", *self.RUlE_NAMES)
+            self.RULE_NAMES = ("inline_math", *self.RULE_NAMES)

@@ -43,7 +43,7 @@ class RestRenderer(BaseRenderer):
 
     def _raw_html(self, html):
         self._include_raw_html = True
-        return r"\ :raw-html-m2r:`{}`\ ".format(html)
+        return rf"\ :raw-html-m2r:`{html}`\ "
 
     def block_code(self, code, lang=None):
         if lang == "math":
@@ -51,7 +51,7 @@ class RestRenderer(BaseRenderer):
         elif lang == "mermaid" and self.use_mermaid:
             first_line = "\n.. mermaid::\n\n"
         elif lang:
-            first_line = "\n.. code-block:: {}\n\n".format(lang)
+            first_line = f"\n.. code-block:: {lang}\n\n"
         elif _is_sphinx:
             first_line = "\n::\n\n"
         else:
@@ -60,7 +60,8 @@ class RestRenderer(BaseRenderer):
 
     def block_quote(self, text):
         # text includes some empty line
-        return "\n..\n\n{}\n\n".format(self._indent_block(text.strip("\n")))
+        quote_text = self._indent_block(text.strip("\n"))
+        return f"\n..\n\n{quote_text}\n\n"
 
     def block_text(self, text):
         return text
@@ -79,7 +80,7 @@ class RestRenderer(BaseRenderer):
         :param level: a number for the header level, for example: 1.
         :param raw: raw text content of the header.
         """
-        return "\n{0}\n{1}\n".format(text, self.hmarks[level] * column_width(text))
+        return f"\n{text}\n{self.hmarks[level] * column_width(text)}\n"
 
     def heading(self, text, level, raw=None):
         """Rendering header/heading tags like ``<h1>`` ``<h2>``.
@@ -228,42 +229,31 @@ class RestRenderer(BaseRenderer):
             underscore = "__"
         else:
             underscore = "_"
+
         if title:
-            return self._raw_html(
-                '<a href="{link}" title="{title}">{text}</a>'.format(
-                    link=link, title=title, text=text
-                )
-            )
+            return self._raw_html(f'<a href="{link}" title="{title}">{text}</a>')
+
         if not self.parse_relative_links:
-            return r"\ `{text} <{target}>`{underscore}\ ".format(
-                target=link, text=text, underscore=underscore
-            )
-        else:
-            url_info = urlparse(link)
-            if url_info.scheme:
-                return r"\ `{text} <{target}>`{underscore}\ ".format(
-                    target=link, text=text, underscore=underscore
-                )
+            return rf"\ `{text} <{link}>`{underscore}\ "
+
+        url_info = urlparse(link)
+        if url_info.scheme:
+            return rf"\ `{text} <{link}>`{underscore}\ "
+
+        link_type = "doc"
+        anchor = url_info.fragment
+        if url_info.fragment:
+            if url_info.path:
+                # Can't link to anchors via doc directive.
+                anchor = ""
             else:
-                link_type = "doc"
-                anchor = url_info.fragment
-                if url_info.fragment:
-                    if url_info.path:
-                        # Can't link to anchors via doc directive.
-                        anchor = ""
-                    else:
-                        # Example: [text](#anchor)
-                        link_type = "ref"
-                doc_link = "{doc_name}{anchor}".format(
-                    # splittext approach works whether or not path is set. It
-                    # will return an empty string if unset, which leads to
-                    # anchor only ref.
-                    doc_name=os.path.splitext(url_info.path)[0],
-                    anchor=anchor,
-                )
-                return r"\ :{link_type}:`{text} <{doc_link}>`\ ".format(
-                    link_type=link_type, doc_link=doc_link, text=text
-                )
+                # Example: [text](#anchor)
+                link_type = "ref"
+        doc_link = f"{os.path.splitext(url_info.path)[0]}{anchor}"
+        # splittext approach works whether or not path is set. It
+        # will return an empty string if unset, which leads to
+        # anchor only ref.
+        return rf"\ :{link_type}:`{text} <{doc_link}>`\ "
 
     def image(self, src, title, text):
         """Rendering a image with title and text.
@@ -277,9 +267,9 @@ class RestRenderer(BaseRenderer):
         return "\n".join(
             [
                 "",
-                ".. image:: {}".format(src),
-                "   :target: {}".format(src),
-                "   :alt: {}".format(text),
+                f".. image:: {src}",
+                f"   :target: {src}",
+                f"   :alt: {tex}",
                 "",
             ]
         )
@@ -301,7 +291,7 @@ class RestRenderer(BaseRenderer):
         :param key: identity key for the footnote.
         :param index: the index count of current footnote.
         """
-        return r"\ [#fn-{}]_\ ".format(key)
+        return rf"\ [#fn-{key}]_\ "
 
     def footnote_item(self, key, text):
         """Rendering a footnote item.
@@ -309,7 +299,7 @@ class RestRenderer(BaseRenderer):
         :param key: identity key for the footnote.
         :param text: text content of the footnote.
         """
-        return ".. [#fn-{0}] {1}\n".format(key, text.strip())
+        return f".. [#fn-{key}] {text.strip()}\n"
 
     def footnotes(self, text):
         """Wrapper for all footnotes.
@@ -318,18 +308,17 @@ class RestRenderer(BaseRenderer):
         """
         if text:
             return "\n\n" + text
-        else:
-            return ""
+        return ""
 
-    """Below outputs are for rst."""
+    # Below outputs are for rst.
 
     def image_link(self, url, target, alt):
         return "\n".join(
             [
                 "",
-                ".. image:: {}".format(url),
-                "   :target: {}".format(target),
-                "   :alt: {}".format(alt),
+                f".. image:: {url}",
+                f"   :target: {target}",
+                f"   :alt: {alt}",
                 "",
             ]
         )
@@ -342,7 +331,7 @@ class RestRenderer(BaseRenderer):
 
     def inline_math(self, math):
         """Extension of recommonmark."""
-        return r":math:`{}`".format(math)
+        return rf":math:`{math}`"
 
     def eol_literal_marker(self, marker):
         """Extension of recommonmark."""

@@ -1,5 +1,4 @@
 import argparse
-import os
 from pathlib import Path
 
 from m2r2 import convert

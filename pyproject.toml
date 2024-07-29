@@ -10,10 +10,9 @@ readme = "README.md"
 m2r2 = "m2r2:main"
 
 [tool.poetry.dependencies]
-python = ">=3.9"
+python = ">=3.9,<4"
 mistune = ">=2.0,<3.0"
 docutils = ">=0.16,<0.22"
-
 
 [tool.poetry.group.dev.dependencies]
 pygments = "^2.18.0"
@@ -23,6 +22,9 @@ pylint = "^3.2.6"
 mypy = "^1.11.0"
 ruff = "^0.5.5"
 bandit = "^1.7.9"
+pycln = "^2.4.0"
+types-docutils = "^0.21.0.20240724"
+types-setuptools = "^71.1.0.20240726"
 
 [tool.poetry.group.testing.dependencies]
 pytest = "^8.3.2"
@@ -36,6 +38,29 @@ exclude_dirs = ["tests"]
 [tool.mypy]
 ignore_missing_imports = true
 follow_imports = "skip"
+
+[tool.pylint.main]
+jobs = 0
+
+[tool.pylint.basic]
+good-names = ["e"]
+class-const-rgx = "(?:(?P<snake>[a-z_]+)|(?P<upper>[A-Z]+))$"
+
+[tool.pylint.design]
+max-locals = 16
+
+[tool.pylint."messages control"]
+disable = [
+  "fixme",
+  "unspecified-encoding",
+  "missing-class-docstring",
+  "missing-function-docstring",
+  "missing-module-docstring",
+  "unused-argument",
+]
+
+[tool.pylint.format]
+max-line-length = 88
 
 [build-system]
 requires = ["poetry-core"]
