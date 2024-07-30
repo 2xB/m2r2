@@ -294,7 +294,24 @@ class RestBlockParser(mistune.BlockParser):
 
 class RestInlineParser(mistune.InlineParser):
     INLINE_MATH = r"`\$(.*?)\$`"
-    IMAGE_LINK = r"\[!\[(?P<alt>.*?)\]\((?P<url>.*?)\).*?\]\((?P<target>.*?)\)"
+    STD_LINK = (
+        r"\[(" + mistune.inline_parser.LINK_TEXT + r")\]\(\s*"
+        r"(<(?:\\[<>]?|[^\s<>\\])*>|"
+        r"(?:\\[()]?|\([^\s\x00-\x1f\\]*\)|[^\s\x00-\x1f()\\])*?)"
+        r"(?:\s+("
+        r""""(?:\\"?|[^"\\])*"|'(?:\\'?|[^'\\])*'|\((?:\\\)?|[^)\\])*\)"""
+        r"))?\s*\)"
+    )
+    IMAGE_LINK = (
+        r"\[!" + STD_LINK + r"\]\(\s*"
+        r"(<(?:\\[<>]?|[^\s<>\\])*>|"
+        r"(?:\\[()]?|\([^\s\x00-\x1f\\]*\)|[^\s\x00-\x1f()\\])*?)"
+        r"(?:\s+("
+        r""""(?:\\"?|[^"\\])*"|'(?:\\'?|[^'\\])*'|\((?:\\\)?|[^)\\])*\)"""
+        r"))?\s*\)"
+    )
+    IMAGE = r"!" + STD_LINK
+
     REST_ROLE = r":.*?:`.*?`|`[^`]+`:.*?:"
     REST_LINK = r"`[^`]*?`_"
     EOL_LITERAL_MARKER = r"(\s+)?::\s*$"
@@ -302,15 +319,22 @@ class RestInlineParser(mistune.InlineParser):
     RULE_NAMES = (
         "inline_math",
         "image_link",
+        "image",
         "rest_role",
         "rest_link",
         "eol_literal_marker",
         *mistune.InlineParser.RULE_NAMES,
     )
 
+    def parse_image(self, match: Match, state: State) -> Element:
+        """Parse image."""
+        alt, src, title = re.match(self.IMAGE, match.group()).groups()
+        return "image", src, alt, title
+
     def parse_image_link(self, match: Match, state: State) -> Element:
-        """Pass through rest role."""
-        alt, src, target = match.groups()
+        """Parse image link."""
+        # TODO: document the hell of re.scanner
+        alt, src, _, target, _ = re.match(self.IMAGE_LINK, match.group()).groups()
         return "image_link", src, target, alt
 
     def parse_rest_role(self, match: Match, state: State) -> Element:
