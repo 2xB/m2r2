@@ -105,21 +105,28 @@ class RestRenderer(BaseRenderer):
         return f"\n{text}\n"
 
     def table(self, text):
+        print(f"table {text=}")
         table = "\n.. list-table::\n"
         rows = text.split("\n")
-        if rows and not rows[0].isspace():
-            table = (
-                table
-                + self.indent
-                + ":header-rows: 1\n\n"
-                + self._indent_block(rows[0])
-                + "\n"
-            )
-            rows = rows[1:]
-        else:
-            table = table + "\n"
-        table = table + self._indent_block("\n".join(rows)) + "\n\n"
+        table = table + self._indent_block("\n".join(text.split("\n"))) + "\n\n"
         return table
+
+    def table_head(self, text):
+        print(f"table_head {text=}")
+        contents = text.splitlines()
+        if not contents:
+            return ""
+        clist = ["* " + contents[0]]
+        if len(contents) > 1:
+            for c in contents[1:]:
+                clist.append("  " + c)
+        bottom = "\n".join(clist) + "\n"
+        return f""":header-rows: 1
+
+{bottom}"""
+
+    def table_body(self, text):
+        return text
 
     def table_row(self, text):
         contents = text.splitlines()
@@ -379,6 +386,9 @@ class RestInlineParser(mistune.InlineParser):
             self.disable_inline_math()
 
 
+from mistune.plugins import plugin_table
+
+
 class M2R2(mistune.Markdown):
     def __init__(self, renderer=None, block=None, inline=None, plugins=None, **kwargs):
         disable_inline_math = kwargs.pop("disable_inline_math", False)
@@ -390,6 +400,9 @@ class M2R2(mistune.Markdown):
             disable_inline_math=disable_inline_math,
             no_underscore_emphasis=no_underscore_emphasis,
         )
+        if plugins is None:
+            plugins = []
+        plugins.append(plugin_table)
         super().__init__(renderer=renderer, block=block, inline=inline, plugins=plugins)
 
     def parse(self, s, state=None):
