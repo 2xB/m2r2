@@ -347,7 +347,9 @@ class RestInlineParser(mistune.InlineParser):
 
     def parse_inline_math(self, match: Match, state: State) -> Element:
         """Pass through rest link."""
-        return "inline_math", match.group(2)
+        # WHY HERE TOO
+        # TODO: CRY
+        return "inline_math", match.group().strip("`").strip("$")
 
     def parse_eol_literal_marker(self, match: Match, state: State) -> Element:
         """Pass through rest link."""
