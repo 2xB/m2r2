@@ -10,7 +10,7 @@ import sys
 from argparse import ArgumentParser, Namespace
 
 import mistune
-from docutils import io, nodes, statemachine, utils
+from docutils import io, statemachine, utils
 from docutils.parsers import rst
 from docutils.utils import column_width
 from pkg_resources import get_distribution
@@ -608,7 +608,6 @@ class MdInclude(rst.Directive):
         path = rst.directives.path(self.arguments[0])
         path = os.path.normpath(os.path.join(source_dir, path))
         path = utils.relative_path(None, path)
-        path = nodes.reprunicode(path)
 
         # get options (currently not use directive-specific options)
         encoding = self.options.get(
